@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="OpenGL_Scratch/OpenGL_Scratch.vcxproj" Id="5e07bb59-4a08-402d-baf1-18a0986eaf5f" />
+</Solution>

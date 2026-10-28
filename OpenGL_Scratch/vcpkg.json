@@ -1,0 +1,8 @@
+{
+  "name": "opengl-scratch",
+  "version-string": "1.0.0",
+  "dependencies": [
+    "glfw3"
+  ],
+  "builtin-baseline": "866e9e258a76437074a5cf02d4c2d71b53bff2f8"
+}
