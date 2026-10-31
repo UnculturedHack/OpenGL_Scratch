@@ -1,8 +1,7 @@
-#include <windows.h>
-#include <gl/GL.h>
+#include "include/_gl.h"
 #include <gl/GLU.h>
 #include <string>
-#include <format>
+//#include <format>
 
 //#define GLFW_INCLUDE_NONE
 //#include <GLFW/glfw3.h>
@@ -10,15 +9,17 @@
 using namespace std;
 
 HWND g_wHndl = nullptr;
-HDC g_devCtxt = nullptr;
+HDC g_dvcCtxt = nullptr;
 HGLRC g_rendCtxt = nullptr;
 
 static constexpr const char* cpWinClsName = "OpenGLWindow";
 static constexpr int32_t cWinWidth = 1600;
 static constexpr int32_t cWinHeight = 900;
 
-//// Function pointer for wglCreateContextAttribsARB
-//typedef HGLRC(WINAPI* PFNWGLCREATECONTEXTATTRIBSARBPROC)(HDC hDC, HGLRC hShareContext, const int* attribList);
+// Function pointer for wglCreateContextAttribsARB
+//using PFNWGLCREATECONTEXTATTRIBSARBPROC = HGLRC(WINAPI*)(HDC, HGLRC, const int*);
+//using PFNGLGENBUFFERSPROC = void (APIENTRY*)(GLsizei, GLuint*);
+//using PFNGLBINDBUFFERPROC = void (APIENTRY*)(GLenum, GLuint);
 
 static void printfDbg(const char* apMsgF, ...)
 {
@@ -81,6 +82,11 @@ static void printfDbg(const char* apMsgF, ...)
     OutputDebugString(fmtMsg.append("\n").c_str());
 }
 
+static void errMsg(const char* const apText, const char* const apCaption)
+{
+    MessageBox(g_wHndl, apText, apCaption, MB_OK | MB_ICONERROR);
+}
+
 static void processInput()
 {
 
@@ -94,6 +100,18 @@ static void update(/*double aDeltaTimeMs*/)
 static void render(HDC* aphDc)
 {
     glClear(GL_COLOR_BUFFER_BIT);
+
+    float vertices[] = {
+    -0.5f, -0.5f, 0.0f,
+     0.5f, -0.5f, 0.0f,
+     0.0f,  0.5f, 0.0f
+    };
+    
+    uint32_t VBO;
+    _gl::glGenBuffers(1, &VBO);                                       
+    _gl::glBindBuffer(_gl::GL_ARRAY_BUFFER, VBO);
+    _gl::glBufferData(_gl::GL_ARRAY_BUFFER, sizeof(vertices), vertices, _gl::GL_STATIC_DRAW);
+
     SwapBuffers(*aphDc);
 }
 
@@ -142,34 +160,122 @@ static void createWindow(HINSTANCE ahInstance)
     );
 }
 
-static void initOpenGL(HWND ahWnd, HDC* aphDc, HGLRC* aphGlrc)
+static bool initOpenGL(HWND ahWnd, HDC* aphDc, HGLRC* aphGlrc)
 {
-    PIXELFORMATDESCRIPTOR pixFmtDesc =
+    if (!_gl::load())
     {
-        sizeof(PIXELFORMATDESCRIPTOR),
-        1,
-        PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
-        PFD_TYPE_RGBA,
-        32, // color depth
-        0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0,
-        24, // Depth buffer
-        8, // Stencil buffer
-        0, 0, 0, 0, 0, 0
-    };
+        errMsg("Failed to load OpenGL functions!", "OpenGL Load Failed!");
+        return false;
+    }
+
+    PIXELFORMATDESCRIPTOR pixFmtDesc{}; 
+    pixFmtDesc.nSize = sizeof(pixFmtDesc);
+    pixFmtDesc.nVersion = 1;
+    pixFmtDesc.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+    pixFmtDesc.iPixelType = PFD_TYPE_RGBA;
+    pixFmtDesc.cColorBits = 32;
+    pixFmtDesc.cDepthBits = 24;
+    pixFmtDesc.cStencilBits = 8;
+    pixFmtDesc.iLayerType = PFD_MAIN_PLANE;
+    
+    //=
+    //{
+    //    sizeof(PIXELFORMATDESCRIPTOR),
+    //    1,
+    //    PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
+    //    PFD_TYPE_RGBA,
+    //    32, // color depth
+    //    0, 0, 0, 0, 0, 0, 0, 0,
+    //    0, 0, 0, 0, 0,
+    //    24, // Depth buffer
+    //    8, // Stencil buffer
+    //    0, 0, 0, 0, 0, 0
+    //};
 
     *aphDc = GetDC(ahWnd);
-    int32_t fmt = ChoosePixelFormat(*aphDc, &pixFmtDesc);
-    SetPixelFormat(*aphDc, fmt, &pixFmtDesc);
-    *aphGlrc = wglCreateContext(*aphDc);
-    wglMakeCurrent(*aphDc, *aphGlrc);
+    if (!*aphDc)
+    {
+        return false;
+    }
+
+    const int32_t pixFmt = ChoosePixelFormat(*aphDc, &pixFmtDesc);
+    if (pixFmt == 0 || !SetPixelFormat(*aphDc, pixFmt, &pixFmtDesc))
+    {
+        //ReleaseDC(ahWnd, *aphDc);
+        //*aphDc = nullptr;
+        return false;
+    }
+
+    HGLRC tempGlrc = wglCreateContext(*aphDc);
+    if (!tempGlrc || !wglMakeCurrent(*aphDc, tempGlrc))
+    {
+        if (tempGlrc)
+        {
+            wglDeleteContext(tempGlrc);
+        }
+
+        //ReleaseDC
+        return false;
+    }
+
+    //PFNWGLCREATECONTEXTATTRIBSARBPROC createContextAttribs = reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(
+    //        wglGetProcAddress("wglCreateContextAttribsARB"));
+    //if (!createContextAttribs)
+    //{
+    //    //wglMakeCurrent(nullptr, nullptr);
+    //    if (tempGlrc)
+    //    {
+    //        wglDeleteContext(tempGlrc);
+    //    }
+    //    return false;
+    //}
+
+    constexpr int WGL_CONTEXT_MAJOR_VERSION_ARB = 0x2091;
+    constexpr int WGL_CONTEXT_MINOR_VERSION_ARB = 0x2092;
+    constexpr int WGL_CONTEXT_PROFILE_MASK_ARB = 0x9126;
+    constexpr int WGL_CONTEXT_CORE_PROFILE_BIT_ARB = 0x00000001;
+
+    const int32_t cAttribs[] = {
+        WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+        WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+        WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+        0
+    };
+
+
+    *aphGlrc = _gl::createContextAttribs(*aphDc, *aphGlrc, cAttribs); // createContextAttribs(*aphDc, nullptr, cAttribs); // wglCreateContext(*aphDc);
+    wglMakeCurrent(nullptr, nullptr);
+    wglDeleteContext(tempGlrc);
+
+    if (!*aphGlrc || !wglMakeCurrent(*aphDc, *aphGlrc))
+    {
+        if (*aphGlrc)
+        {
+            wglDeleteContext(*aphGlrc);
+        }
+
+        return false;
+    }
+
+    glViewport(0, 0, cWinWidth, cWinHeight);
+    return true;
 }
 
-static void shutdownOpenGL(HWND ahWnd, HDC ahDc, HGLRC ahGlrc)
+static void shutdownOpenGL(HWND ahWnd, HDC& ahDc, HGLRC& ahGlrc)
 {
     wglMakeCurrent(nullptr, nullptr);
-    wglDeleteContext(ahGlrc);
-    ReleaseDC(ahWnd, ahDc);
+
+    if (ahGlrc)
+    {
+        wglDeleteContext(ahGlrc);
+        ahGlrc = nullptr;
+    }
+
+    if (ahDc)
+    {
+        ReleaseDC(ahWnd, ahDc);
+        ahDc = nullptr;
+    }
 }
 
 int32_t WINAPI wWinMain(_In_ HINSTANCE ahInstance, _In_opt_ HINSTANCE ahPrevInstance, _In_ PWSTR aArgsStr, _In_ int32_t anCmdShow)
@@ -177,7 +283,14 @@ int32_t WINAPI wWinMain(_In_ HINSTANCE ahInstance, _In_opt_ HINSTANCE ahPrevInst
     registerWndClass(ahInstance);
     createWindow(ahInstance);
 
-    initOpenGL(g_wHndl, &g_devCtxt, &g_rendCtxt);
+    if (!initOpenGL(g_wHndl, &g_dvcCtxt, &g_rendCtxt))
+    {
+        //MessageBox(g_wHndl, "Could not create an OpenGL 3.3 context.", "OpenGL Init Error", MB_OK | MB_ICONERROR);
+        errMsg("Could not create an OpenGL 3.3 context.", "OpenGL Init Error");
+        DestroyWindow(g_wHndl);
+        return 1;
+    }
+
     ShowWindow(g_wHndl, anCmdShow);
 
     glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
@@ -190,10 +303,10 @@ int32_t WINAPI wWinMain(_In_ HINSTANCE ahInstance, _In_opt_ HINSTANCE ahPrevInst
 
         update();
 
-        render(&g_devCtxt);
+        render(&g_dvcCtxt);
     }
 
-    shutdownOpenGL(g_wHndl, g_devCtxt, g_rendCtxt);
+    shutdownOpenGL(g_wHndl, g_dvcCtxt, g_rendCtxt);
     DestroyWindow(g_wHndl);
     return msg.wParam;
 }

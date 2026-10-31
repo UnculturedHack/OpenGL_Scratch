@@ -10,6 +10,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="third_party\glad\src\gl.c" />
+    <ClCompile Include="src\_gl.cpp" />
+    <ClCompile Include="src\utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\_gl.h" />
+    <ClInclude Include="include\utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\shaders\simpleVert.glsl" />
   </ItemGroup>
 </Project>

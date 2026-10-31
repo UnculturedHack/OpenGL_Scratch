@@ -20,6 +20,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\utils.cpp" />
+    <ClCompile Include="src\_gl.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\utils.h" />
+    <ClInclude Include="include\_gl.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\shaders\simpleVert.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
