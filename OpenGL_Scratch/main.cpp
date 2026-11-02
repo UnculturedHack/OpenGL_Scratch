@@ -1,10 +1,9 @@
 #include "include/_gl.h"
-#include <gl/GLU.h>
-#include <string>
-//#include <format>
-
-//#define GLFW_INCLUDE_NONE
-//#include <GLFW/glfw3.h>
+#include "include/utils.h"
+//#include <gl/GLU.h>
+//#include <string>
+#include <stdexcept>
+#include <format>
 
 using namespace std;
 
@@ -16,10 +15,8 @@ static constexpr const char* cpWinClsName = "OpenGLWindow";
 static constexpr int32_t cWinWidth = 1600;
 static constexpr int32_t cWinHeight = 900;
 
-// Function pointer for wglCreateContextAttribsARB
-//using PFNWGLCREATECONTEXTATTRIBSARBPROC = HGLRC(WINAPI*)(HDC, HGLRC, const int*);
-//using PFNGLGENBUFFERSPROC = void (APIENTRY*)(GLsizei, GLuint*);
-//using PFNGLBINDBUFFERPROC = void (APIENTRY*)(GLenum, GLuint);
+const char* cpSimpleVtxShaderSrcPath = "assets/shaders/simpleVert.glsl";
+const char* cpSimpleFrgShaderSrcPath = "assets/shaders/simpleFrag.glsl";
 
 static void printfDbg(const char* apMsgF, ...)
 {
@@ -177,20 +174,6 @@ static bool initOpenGL(HWND ahWnd, HDC* aphDc, HGLRC* aphGlrc)
     pixFmtDesc.cDepthBits = 24;
     pixFmtDesc.cStencilBits = 8;
     pixFmtDesc.iLayerType = PFD_MAIN_PLANE;
-    
-    //=
-    //{
-    //    sizeof(PIXELFORMATDESCRIPTOR),
-    //    1,
-    //    PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
-    //    PFD_TYPE_RGBA,
-    //    32, // color depth
-    //    0, 0, 0, 0, 0, 0, 0, 0,
-    //    0, 0, 0, 0, 0,
-    //    24, // Depth buffer
-    //    8, // Stencil buffer
-    //    0, 0, 0, 0, 0, 0
-    //};
 
     *aphDc = GetDC(ahWnd);
     if (!*aphDc)
@@ -201,8 +184,6 @@ static bool initOpenGL(HWND ahWnd, HDC* aphDc, HGLRC* aphGlrc)
     const int32_t pixFmt = ChoosePixelFormat(*aphDc, &pixFmtDesc);
     if (pixFmt == 0 || !SetPixelFormat(*aphDc, pixFmt, &pixFmtDesc))
     {
-        //ReleaseDC(ahWnd, *aphDc);
-        //*aphDc = nullptr;
         return false;
     }
 
@@ -214,21 +195,8 @@ static bool initOpenGL(HWND ahWnd, HDC* aphDc, HGLRC* aphGlrc)
             wglDeleteContext(tempGlrc);
         }
 
-        //ReleaseDC
         return false;
     }
-
-    //PFNWGLCREATECONTEXTATTRIBSARBPROC createContextAttribs = reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(
-    //        wglGetProcAddress("wglCreateContextAttribsARB"));
-    //if (!createContextAttribs)
-    //{
-    //    //wglMakeCurrent(nullptr, nullptr);
-    //    if (tempGlrc)
-    //    {
-    //        wglDeleteContext(tempGlrc);
-    //    }
-    //    return false;
-    //}
 
     constexpr int WGL_CONTEXT_MAJOR_VERSION_ARB = 0x2091;
     constexpr int WGL_CONTEXT_MINOR_VERSION_ARB = 0x2092;
@@ -241,7 +209,6 @@ static bool initOpenGL(HWND ahWnd, HDC* aphDc, HGLRC* aphGlrc)
         WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
         0
     };
-
 
     *aphGlrc = _gl::createContextAttribs(*aphDc, *aphGlrc, cAttribs); // createContextAttribs(*aphDc, nullptr, cAttribs); // wglCreateContext(*aphDc);
     wglMakeCurrent(nullptr, nullptr);
@@ -278,6 +245,126 @@ static void shutdownOpenGL(HWND ahWnd, HDC& ahDc, HGLRC& ahGlrc)
     }
 }
 
+static bool loadShaderSrc(const char* apVtxShdrSrcPath, string& aVertShaderSrc, const char* apFrgShdrSrcPath, string& aFragShaderSrc)
+{
+    try
+    {
+        utils::loadTxtFile(apVtxShdrSrcPath, aVertShaderSrc);
+    }
+    catch (runtime_error ex)
+    {
+        string errorMsg = format("Failed to load source code for vertex shader. Error message:\n\n\"{}\"\n\nExiting...", *ex.what());
+        errMsg(errorMsg.c_str(), "Shader Src Load Failed!");
+        aVertShaderSrc = "";
+    }
+
+    try
+    {
+        utils::loadTxtFile(apFrgShdrSrcPath, aFragShaderSrc);
+    }
+    catch (runtime_error ex)
+    {
+        string errorMsg = format("Failed to load source code for fragment shader. Error message:\n\n\"{}\"\n\nExiting...", *ex.what());
+        errMsg(errorMsg.c_str(), "Shader Src Load Failed!");
+        aFragShaderSrc = "";
+    }
+
+    if (aVertShaderSrc == "" || aFragShaderSrc == "")
+    {
+        return false;
+    }
+}
+
+static bool createEmptyShaders(uint32_t& aVertexShader, uint32_t& aFragmentShader)
+{
+    aVertexShader = _gl::glCreateShader(_gl::GL_VERTEX_SHADER);
+    if (!aVertexShader)
+    {
+        errMsg("Failed to create a vertext shader!", "Shader Creation Failed!\n\nExiting...");
+        return false;
+    }
+
+    aFragmentShader = _gl::glCreateShader(_gl::GL_FRAGMENT_SHADER);
+    if (!aFragmentShader)
+    {
+        errMsg("Failed to create fragment shader!", "Shader Creation Failed!\n\nExiting...");
+        return false;
+    }
+
+    return true;
+}
+
+static bool compileShaders(uint32_t aVertexShader, const _gl::GLchar* apVertShaderSrc, uint32_t aFragmentShader, const _gl::GLchar* apFragShaderSrc)
+{
+    _gl::glShaderSource(aVertexShader, 1, &apVertShaderSrc, nullptr);
+    _gl::glCompileShader(aVertexShader);
+    int32_t vtxCompStatus;
+    _gl::glGetShaderiv(aVertexShader, _gl::GL_COMPILE_STATUS, &vtxCompStatus);
+    if (!vtxCompStatus)
+    {
+        errMsg("Vertex shader compilation failed!", "Shader Comp Failed!");
+        return false;
+    }
+
+    _gl::glShaderSource(aFragmentShader, 1, &apFragShaderSrc, nullptr);
+    _gl::glCompileShader(aFragmentShader);
+    int32_t frgCompStatus;
+    _gl::glGetShaderiv(aFragmentShader, _gl::GL_COMPILE_STATUS, &frgCompStatus);
+    if (!frgCompStatus)
+    {
+        errMsg("Fragment shader compilation failed!", "Shader Comp Failed!");
+        return false;
+    }
+
+    return true;
+}
+
+static bool InitShaders()
+{
+    string vtxSrc;
+    string frgSrc;
+    if (!loadShaderSrc(cpSimpleVtxShaderSrcPath, vtxSrc, cpSimpleFrgShaderSrcPath, frgSrc))
+    {
+        return false;
+    }
+
+    uint32_t vertexShader;
+    uint32_t fragmentShader;
+    if (!createEmptyShaders(vertexShader, fragmentShader))
+    {
+        return false;
+    }
+
+    if (!compileShaders(vertexShader, vtxSrc.c_str(), fragmentShader, frgSrc.c_str()))
+    {
+        return false;
+    }
+
+    uint32_t shaderProg = _gl::glCreateProgram();
+    if (!shaderProg)
+    {
+        errMsg("Failed to create shader program!", "Error!");
+        return false;
+    }
+
+    _gl::glAttachShader(shaderProg, vertexShader);
+    _gl::glAttachShader(shaderProg, fragmentShader);
+    _gl::glLinkProgram(shaderProg);
+    int32_t linkStatus;
+    _gl::glGetProgramiv(shaderProg, _gl::GL_LINK_STATUS, &linkStatus);
+    bool linkSuccess = true;
+    if (!linkStatus)
+    {
+        char infoLog[512];
+        _gl::glGetProgramInfoLog(shaderProg, 512, nullptr, infoLog);
+        errMsg(format("Failed to link the shader program. Program log: {}", infoLog).c_str(), "Link Error!");
+        linkSuccess = false;
+    }
+
+    _gl::glDeleteShader(vertexShader);
+    _gl::glDeleteShader(fragmentShader);
+}
+
 int32_t WINAPI wWinMain(_In_ HINSTANCE ahInstance, _In_opt_ HINSTANCE ahPrevInstance, _In_ PWSTR aArgsStr, _In_ int32_t anCmdShow)
 {
     registerWndClass(ahInstance);
@@ -285,11 +372,12 @@ int32_t WINAPI wWinMain(_In_ HINSTANCE ahInstance, _In_opt_ HINSTANCE ahPrevInst
 
     if (!initOpenGL(g_wHndl, &g_dvcCtxt, &g_rendCtxt))
     {
-        //MessageBox(g_wHndl, "Could not create an OpenGL 3.3 context.", "OpenGL Init Error", MB_OK | MB_ICONERROR);
         errMsg("Could not create an OpenGL 3.3 context.", "OpenGL Init Error");
         DestroyWindow(g_wHndl);
         return 1;
     }
+
+    InitShaders();
 
     ShowWindow(g_wHndl, anCmdShow);
 

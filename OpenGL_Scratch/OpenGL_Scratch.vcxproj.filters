@@ -19,5 +19,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\simpleVert.glsl" />
+    <None Include="assets\shaders\simpleFrag.glsl" />
   </ItemGroup>
 </Project>

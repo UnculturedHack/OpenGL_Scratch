@@ -28,6 +28,7 @@
     <ClInclude Include="include\_gl.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="assets\shaders\simpleFrag.glsl" />
     <None Include="assets\shaders\simpleVert.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
