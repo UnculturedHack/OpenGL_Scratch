@@ -21,15 +21,18 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="src\utils.cpp" />
-    <ClCompile Include="src\_gl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\utils.h" />
-    <ClInclude Include="include\_gl.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\simpleFrag.glsl" />
     <None Include="assets\shaders\simpleVert.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\_gl\_gl.vcxproj">
+      <Project>{7b90f0e3-b54b-48ac-b896-5a378b793a68}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
@@ -94,6 +97,7 @@
       <PreprocessorDefinitions>_WINDOWS;</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\_gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -112,6 +116,7 @@
       <PreprocessorDefinitions>_WINDOWS;</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\_gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -128,7 +133,7 @@
       <PreprocessorDefinitions>_WINDOWS;</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)third_party\glad\include;$(ProjectDir)vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\_gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -149,7 +154,7 @@
       <PreprocessorDefinitions>_WINDOWS;</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)third_party\glad\include;$(ProjectDir)vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\_gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

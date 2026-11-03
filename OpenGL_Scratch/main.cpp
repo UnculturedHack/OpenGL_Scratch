@@ -1,4 +1,4 @@
-#include "include/_gl.h"
+#include <_gl.h>
 #include "include/utils.h"
 #include <format>
 
@@ -95,8 +95,9 @@ static void render(HDC* aphDc, const _gl::ShaderData aShaderData)
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    _gl::glUseProgram(aShaderData.m_shaderProg);
-    _gl::glBindVertexArray(aShaderData.m_vtxArryObj);
+    _gl::glUseProgram(aShaderData.m_cShaderProg);
+    _gl::glBindVertexArray(aShaderData.m_cVtxArryObj);
+    //glDrawArrays(GL_TRIANGLES, 0, 6);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     
     SwapBuffers(*aphDc);
@@ -220,6 +221,14 @@ static bool initOpenGL(HWND ahWnd, HDC* aphDc, HGLRC* aphGlrc)
         return false;
     }
 
+    // wireframe rendering mode:
+    // arg 1: apply to front and back of all triangles
+    // arg 2: draw them as lines
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE) 
+    // 
+    // revert to normal:
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+
     glViewport(0, 0, cWinWidth, cWinHeight);
     return true;
 }
@@ -342,20 +351,38 @@ static uint32_t linkShaderProgram(uint32_t& aVertexShader, uint32_t& aFragmentSh
     return shaderProg;
 }
 
-static void initBuffers(uint32_t* apVBO, uint32_t* apVAO, uint32_t* apEBO)
+static void initShaderBuffers(uint32_t* apVBO, uint32_t* apVAO, uint32_t* apEBO)
 {
-    float vertices[] =
-    {
-         0.5f,  0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
+    //float vertices[] =
+    //{
+    //     0.5f,  0.5f, 0.0f,
+    //     0.5f, -0.5f, 0.0f,
+    //    -0.5f, -0.5f, 0.0f,
+    //    -0.5f,  0.5f, 0.0f
+    //};
+
+    //float vertices[] = {
+    //-0.5f, -0.5f, 0.0f,
+    // 0.5f, -0.5f, 0.0f,
+    // 0.0f,  0.5f, 0.0f
+    //};
+
+    float vertices[] = {
+        // Tri 1
         -0.5f, -0.5f, 0.0f,
-        -0.5f,  0.5f, 0.0f
+        0.0f, -0.5f, 0.0f,
+        -0.25f, 0.0f, 0.0f,
+        // Tri 2
+        0.5f, 0.5f, 0.0f,
+        0.25f,  0.0f, 0.0f,
+        0.0f, 0.5f, 0.0f
     };
 
     uint32_t indices[] =
     {
-        0, 1, 3,
-        1, 2, 3
+        0,1,2,3,4,5
+        //0, 1, 3, 5, 2, 4
+        //1, 2, 3
     };
 
     _gl::glGenVertexArrays(1, apVAO);
@@ -418,7 +445,7 @@ static const _gl::ShaderData initShaders() //uint32_t& aVBO, uint32_t& aVAO, uin
     uint32_t VAO;
     uint32_t EBO;
 
-    initBuffers(&VBO, &VAO, &EBO);
+    initShaderBuffers(&VBO, &VAO, &EBO);
 
     if (!VBO || !VAO || !EBO)
     {
@@ -441,7 +468,7 @@ int32_t WINAPI wWinMain(_In_ HINSTANCE ahInstance, _In_opt_ HINSTANCE ahPrevInst
     }
 
     const _gl::ShaderData shaderData = initShaders();
-    if (!shaderData.m_shaderProg)
+    if (!shaderData.m_cShaderProg)
     {
         errMsg("Shader initialization failed.\n\nExiting...", "Shader Setup Error!");
         shutdownOpenGL(g_wHndl, g_dvcCtxt, g_rendCtxt);
