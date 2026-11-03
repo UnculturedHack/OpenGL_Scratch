@@ -1,8 +1,5 @@
 #include "include/_gl.h"
 #include "include/utils.h"
-//#include <gl/GLU.h>
-//#include <string>
-#include <stdexcept>
 #include <format>
 
 using namespace std;
@@ -15,8 +12,8 @@ static constexpr const char* cpWinClsName = "OpenGLWindow";
 static constexpr int32_t cWinWidth = 1600;
 static constexpr int32_t cWinHeight = 900;
 
-const char* cpSimpleVtxShaderSrcPath = "assets/shaders/simpleVert.glsl";
-const char* cpSimpleFrgShaderSrcPath = "assets/shaders/simpleFrag.glsl";
+static constexpr const char* cpSimpleVtxShaderSrcPath = "assets/shaders/simpleVert.glsl";
+static constexpr const char* cpSimpleFrgShaderSrcPath = "assets/shaders/simpleFrag.glsl";
 
 static void printfDbg(const char* apMsgF, ...)
 {
@@ -94,21 +91,14 @@ static void update(/*double aDeltaTimeMs*/)
     // logic
 }
 
-static void render(HDC* aphDc)
+static void render(HDC* aphDc, const _gl::ShaderData aShaderData)
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    float vertices[] = {
-    -0.5f, -0.5f, 0.0f,
-     0.5f, -0.5f, 0.0f,
-     0.0f,  0.5f, 0.0f
-    };
+    _gl::glUseProgram(aShaderData.m_shaderProg);
+    _gl::glBindVertexArray(aShaderData.m_vtxArryObj);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     
-    uint32_t VBO;
-    _gl::glGenBuffers(1, &VBO);                                       
-    _gl::glBindBuffer(_gl::GL_ARRAY_BUFFER, VBO);
-    _gl::glBufferData(_gl::GL_ARRAY_BUFFER, sizeof(vertices), vertices, _gl::GL_STATIC_DRAW);
-
     SwapBuffers(*aphDc);
 }
 
@@ -159,12 +149,6 @@ static void createWindow(HINSTANCE ahInstance)
 
 static bool initOpenGL(HWND ahWnd, HDC* aphDc, HGLRC* aphGlrc)
 {
-    if (!_gl::load())
-    {
-        errMsg("Failed to load OpenGL functions!", "OpenGL Load Failed!");
-        return false;
-    }
-
     PIXELFORMATDESCRIPTOR pixFmtDesc{}; 
     pixFmtDesc.nSize = sizeof(pixFmtDesc);
     pixFmtDesc.nVersion = 1;
@@ -210,6 +194,12 @@ static bool initOpenGL(HWND ahWnd, HDC* aphDc, HGLRC* aphGlrc)
         0
     };
 
+    if (!_gl::loadWglCrtCtxtFunction())
+    {
+        errMsg("Failed to load WGL context creation function!", "WGL Load Failed!");
+        return false;
+    }
+
     *aphGlrc = _gl::createContextAttribs(*aphDc, *aphGlrc, cAttribs); // createContextAttribs(*aphDc, nullptr, cAttribs); // wglCreateContext(*aphDc);
     wglMakeCurrent(nullptr, nullptr);
     wglDeleteContext(tempGlrc);
@@ -221,6 +211,12 @@ static bool initOpenGL(HWND ahWnd, HDC* aphDc, HGLRC* aphGlrc)
             wglDeleteContext(*aphGlrc);
         }
 
+        return false;
+    }
+
+    if (!_gl::loadOpenGlFunctions())
+    {
+        errMsg("Failed to load OpenGL functions!", "OpenGL Load Failed!");
         return false;
     }
 
@@ -269,10 +265,7 @@ static bool loadShaderSrc(const char* apVtxShdrSrcPath, string& aVertShaderSrc, 
         aFragShaderSrc = "";
     }
 
-    if (aVertShaderSrc == "" || aFragShaderSrc == "")
-    {
-        return false;
-    }
+    return aVertShaderSrc != "" && aFragShaderSrc != "";
 }
 
 static bool createEmptyShaders(uint32_t& aVertexShader, uint32_t& aFragmentShader)
@@ -302,7 +295,9 @@ static bool compileShaders(uint32_t aVertexShader, const _gl::GLchar* apVertShad
     _gl::glGetShaderiv(aVertexShader, _gl::GL_COMPILE_STATUS, &vtxCompStatus);
     if (!vtxCompStatus)
     {
-        errMsg("Vertex shader compilation failed!", "Shader Comp Failed!");
+        char infoLog;
+        _gl::glGetShaderInfoLog(aVertexShader, 512, nullptr, &infoLog);
+        errMsg(format("Vertex shader compilation failed! Log:\n\n{}", infoLog).c_str(), "Shader Comp Failed!");
         return false;
     }
 
@@ -312,57 +307,125 @@ static bool compileShaders(uint32_t aVertexShader, const _gl::GLchar* apVertShad
     _gl::glGetShaderiv(aFragmentShader, _gl::GL_COMPILE_STATUS, &frgCompStatus);
     if (!frgCompStatus)
     {
-        errMsg("Fragment shader compilation failed!", "Shader Comp Failed!");
+        char infoLog;
+        _gl::glGetShaderInfoLog(aFragmentShader, 512, nullptr, &infoLog);
+        errMsg(format("Fragment shader compilation failed! Log:\n\n{}", infoLog).c_str(), "Shader Comp Failed!");
         return false;
     }
 
     return true;
 }
 
-static bool InitShaders()
+static uint32_t linkShaderProgram(uint32_t& aVertexShader, uint32_t& aFragmentShader)
+{
+    uint32_t shaderProg = _gl::glCreateProgram();
+    if (!shaderProg)
+    {
+        errMsg("Failed to create shader program!", "Error!");
+        return 0;
+    }
+
+    _gl::glAttachShader(shaderProg, aVertexShader);
+    _gl::glAttachShader(shaderProg, aFragmentShader);
+    _gl::glLinkProgram(shaderProg);
+    int32_t linkStatus;
+    _gl::glGetProgramiv(shaderProg, _gl::GL_LINK_STATUS, &linkStatus);
+    if (!linkStatus)
+    {
+        char infoLog[512];
+        _gl::glGetProgramInfoLog(shaderProg, 512, nullptr, infoLog);
+        errMsg(format("Failed to link the shader program. Program log: {}", infoLog).c_str(), "Link Error!");
+        _gl::glDeleteProgram(shaderProg);
+        return 0;
+    }
+
+    return shaderProg;
+}
+
+static void initBuffers(uint32_t* apVBO, uint32_t* apVAO, uint32_t* apEBO)
+{
+    float vertices[] =
+    {
+         0.5f,  0.5f, 0.0f,
+         0.5f, -0.5f, 0.0f,
+        -0.5f, -0.5f, 0.0f,
+        -0.5f,  0.5f, 0.0f
+    };
+
+    uint32_t indices[] =
+    {
+        0, 1, 3,
+        1, 2, 3
+    };
+
+    _gl::glGenVertexArrays(1, apVAO);
+    _gl::glGenBuffers(1,  apVBO);
+    _gl::glGenBuffers(1, apEBO);
+    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+    _gl::glBindVertexArray(*apVAO);
+
+    _gl::glBindBuffer(_gl::GL_ARRAY_BUFFER, *apVBO);
+    _gl::glBufferData(_gl::GL_ARRAY_BUFFER, sizeof(vertices), vertices, _gl::GL_STATIC_DRAW);
+
+    _gl::glBindBuffer(_gl::GL_ELEMENT_ARRAY_BUFFER, *apEBO);
+    _gl::glBufferData(_gl::GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, _gl::GL_STATIC_DRAW);
+
+    _gl::glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    _gl::glEnableVertexAttribArray(0);
+
+    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+    _gl::glBindBuffer(_gl::GL_ARRAY_BUFFER, 0);
+
+    // remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
+    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
+    _gl::glBindVertexArray(0);
+}
+
+static const _gl::ShaderData initShaders() //uint32_t& aVBO, uint32_t& aVAO, uint32_t& aEBO)
 {
     string vtxSrc;
     string frgSrc;
     if (!loadShaderSrc(cpSimpleVtxShaderSrcPath, vtxSrc, cpSimpleFrgShaderSrcPath, frgSrc))
     {
-        return false;
+        return {};
     }
 
     uint32_t vertexShader;
     uint32_t fragmentShader;
     if (!createEmptyShaders(vertexShader, fragmentShader))
     {
-        return false;
+        return {};
     }
 
     if (!compileShaders(vertexShader, vtxSrc.c_str(), fragmentShader, frgSrc.c_str()))
     {
-        return false;
+        return {};
     }
 
-    uint32_t shaderProg = _gl::glCreateProgram();
-    if (!shaderProg)
-    {
-        errMsg("Failed to create shader program!", "Error!");
-        return false;
-    }
-
-    _gl::glAttachShader(shaderProg, vertexShader);
-    _gl::glAttachShader(shaderProg, fragmentShader);
-    _gl::glLinkProgram(shaderProg);
-    int32_t linkStatus;
-    _gl::glGetProgramiv(shaderProg, _gl::GL_LINK_STATUS, &linkStatus);
-    bool linkSuccess = true;
-    if (!linkStatus)
-    {
-        char infoLog[512];
-        _gl::glGetProgramInfoLog(shaderProg, 512, nullptr, infoLog);
-        errMsg(format("Failed to link the shader program. Program log: {}", infoLog).c_str(), "Link Error!");
-        linkSuccess = false;
-    }
-
+    uint32_t shaderProg = linkShaderProgram(vertexShader, fragmentShader);
     _gl::glDeleteShader(vertexShader);
     _gl::glDeleteShader(fragmentShader);
+
+    if (!shaderProg)
+    {
+        return {};
+    }
+
+    uint32_t VBO;
+    uint32_t VAO;
+    uint32_t EBO;
+
+    initBuffers(&VBO, &VAO, &EBO);
+
+    if (!VBO || !VAO || !EBO)
+    {
+        return {};
+    }
+
+    return { shaderProg, VBO, VAO, EBO };
 }
 
 int32_t WINAPI wWinMain(_In_ HINSTANCE ahInstance, _In_opt_ HINSTANCE ahPrevInstance, _In_ PWSTR aArgsStr, _In_ int32_t anCmdShow)
@@ -372,12 +435,19 @@ int32_t WINAPI wWinMain(_In_ HINSTANCE ahInstance, _In_opt_ HINSTANCE ahPrevInst
 
     if (!initOpenGL(g_wHndl, &g_dvcCtxt, &g_rendCtxt))
     {
-        errMsg("Could not create an OpenGL 3.3 context.", "OpenGL Init Error");
+        errMsg("Could not create an OpenGL 3.3 context.\n\nExiting...", "OpenGL Init Error!");
         DestroyWindow(g_wHndl);
         return 1;
     }
 
-    InitShaders();
+    const _gl::ShaderData shaderData = initShaders();
+    if (!shaderData.m_shaderProg)
+    {
+        errMsg("Shader initialization failed.\n\nExiting...", "Shader Setup Error!");
+        shutdownOpenGL(g_wHndl, g_dvcCtxt, g_rendCtxt);
+        DestroyWindow(g_wHndl);
+        return 1;
+    }
 
     ShowWindow(g_wHndl, anCmdShow);
 
@@ -389,9 +459,9 @@ int32_t WINAPI wWinMain(_In_ HINSTANCE ahInstance, _In_opt_ HINSTANCE ahPrevInst
         TranslateMessage(&msg);
         DispatchMessage(&msg);
 
+        processInput();
         update();
-
-        render(&g_dvcCtxt);
+        render(&g_dvcCtxt, shaderData);
     }
 
     shutdownOpenGL(g_wHndl, g_dvcCtxt, g_rendCtxt);

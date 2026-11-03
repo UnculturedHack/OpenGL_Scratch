@@ -2,7 +2,6 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
-#include <string>
 
 void utils::loadTxtFile(const char* const acpTxtFilePath, std::string& aLoadedText)
 {

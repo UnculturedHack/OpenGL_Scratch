@@ -71,16 +71,48 @@ namespace
 	PFNGLGETPROGRAMIVPROC pGlGetProgramivFunc = nullptr;
 	constexpr const char* cpGlGetProgramivFuncName = "glGetProgramiv";
 
-	using PFNGLGETPROGRAMINFOLOGFUNC = void (APIENTRY*)(GLuint, GLsizei, GLsizei*, _gl::GLchar*);
-	PFNGLGETPROGRAMINFOLOGFUNC pGlGetProgramInfoLogFunc = nullptr;
+	using PFNGLGETPROGRAMINFOLOGPROC = void (APIENTRY*)(GLuint, GLsizei, GLsizei*, _gl::GLchar*);
+	PFNGLGETPROGRAMINFOLOGPROC pGlGetProgramInfoLogFunc = nullptr;
 	constexpr const char* cpGlGetProgramInfoLogFuncName = "glGetProgramInfoLog";
 
-	// glVertexAttribPointer
+	using PFNGLENABLEVERTEXATTRIBARRAYPROC = void (APIENTRY*)(GLuint);
+	PFNGLENABLEVERTEXATTRIBARRAYPROC pGlEnableVertexAttribArrayFunc = nullptr;
+	constexpr const char* cpGlEnableVertexAttribArrayFuncName = "glEnableVertexAttribArray";
+
+	using PFNGLDISABLEVERTEXATTRIBARRAYPROC = void (APIENTRY*)(GLuint);
+	PFNGLDISABLEVERTEXATTRIBARRAYPROC pGlDisableVertexAttribArrayFunc = nullptr;
+	constexpr const char* cpGlDisableVertexAttribArrayFuncName = "glDisableVertexAttribArray";
+
+	using PFNGLDELETEVERTEXARRAYSPROC = void (APIENTRY*)(GLsizei, const GLuint*);
+	PFNGLDELETEVERTEXARRAYSPROC pGlDeleteVertexArraysFunc = nullptr;
+	constexpr const char* cpGlDeleteVertexArraysFuncName = "glDeleteVertexArrays";
+	
+	using PFNGLDELETEBUFFERSPROC = void (APIENTRY*)(GLsizei, const GLuint*);
+	PFNGLDELETEBUFFERSPROC pGlDeleteBuffersFunc = nullptr;
+	constexpr const char* cpGlDeleteBuffersFuncName = "glDeleteBuffers";
+
+	using PFNGLDELETEPROGRAMPROC = void (APIENTRY*)(GLuint);
+	PFNGLDELETEPROGRAMPROC pGlDeleteProgramFunc = nullptr;
+	constexpr const char* cpGlDeleteProgramFuncName = "glDeleteProgram";
+
+	using PFNGLGENVERTEXARRAYSPROC = void (APIENTRY*)(GLsizei, GLuint*);
+	PFNGLGENVERTEXARRAYSPROC pGlGenVertexArraysFunc = nullptr;
+	constexpr const char* cpGlGenVertexArraysFuncName = "glGenVertexArrays";
+
+	using PFNGLBINDVERTEXARRAYPROC = void (APIENTRY*)(GLuint);
+	PFNGLBINDVERTEXARRAYPROC pGlBindVertexArrayFunc = nullptr;
+	constexpr const char* cpGlBindVertexArrayFuncName = "glBindVertexArray";
 }
 
-bool _gl::load()
+bool _gl::loadWglCrtCtxtFunction()
 {
 	pWglCrtCtxtFunc = reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(wglGetProcAddress(cpWglCrtCtxtFuncName));
+
+	return pWglCrtCtxtFunc;
+}
+
+bool _gl::loadOpenGlFunctions()
+{
 	pGlGenBuffersFunc = reinterpret_cast<PFNGLGENBUFFERSPROC>(wglGetProcAddress(cpGlGenBuffersFuncName));
 	pGlBindBufferFunc = reinterpret_cast<PFNGLBINDBUFFERPROC>(wglGetProcAddress(cpGlBindBufferFuncName));
 	pGlBufferDataFunc = reinterpret_cast<PFNGLBUFFERDATAPROC>(wglGetProcAddress(cpGlBufferDataFuncName));
@@ -97,10 +129,18 @@ bool _gl::load()
 	pGlVertexAttribIPointerFunc = reinterpret_cast<PFNGLVERTEXATTRIBIPOINTERPROC>(wglGetProcAddress(cpGlVertexAttribIPointerFuncName));
 	pGlAttachShaderFunc = reinterpret_cast<PFNGLATTACHSHADERPROC>(wglGetProcAddress(cpGlAttachShaderFuncName));
 	pGlGetProgramivFunc = reinterpret_cast<PFNGLGETPROGRAMIVPROC>(wglGetProcAddress(cpGlGetProgramivFuncName));
+	pGlEnableVertexAttribArrayFunc = reinterpret_cast<PFNGLENABLEVERTEXATTRIBARRAYPROC>(wglGetProcAddress(cpGlEnableVertexAttribArrayFuncName));
+	pGlDisableVertexAttribArrayFunc = reinterpret_cast<PFNGLDISABLEVERTEXATTRIBARRAYPROC>(wglGetProcAddress(cpGlDisableVertexAttribArrayFuncName));
+	pGlDeleteVertexArraysFunc = reinterpret_cast<PFNGLDELETEVERTEXARRAYSPROC>(wglGetProcAddress(cpGlDeleteVertexArraysFuncName));
+	pGlDeleteBuffersFunc = reinterpret_cast<PFNGLDELETEBUFFERSPROC>(wglGetProcAddress(cpGlDeleteBuffersFuncName));
+	pGlDeleteProgramFunc = reinterpret_cast<PFNGLDELETEPROGRAMPROC>(wglGetProcAddress(cpGlDeleteProgramFuncName));
+	pGlGenVertexArraysFunc = reinterpret_cast<PFNGLGENVERTEXARRAYSPROC>(wglGetProcAddress(cpGlGenVertexArraysFuncName));
+	pGlBindVertexArrayFunc = reinterpret_cast<PFNGLBINDVERTEXARRAYPROC>(wglGetProcAddress(cpGlBindVertexArrayFuncName));
 
-	return pWglCrtCtxtFunc && pGlGenBuffersFunc && pGlBindBufferFunc && pGlBufferDataFunc && pGlCreateShaderFunc && pGlShaderSourceFunc && pGlCompileShaderFunc &&
+	return pGlGenBuffersFunc && pGlBindBufferFunc && pGlBufferDataFunc && pGlCreateShaderFunc && pGlShaderSourceFunc && pGlCompileShaderFunc &&
 		pGlGetShaderivFunc && pGlGetShaderInfoLogFunc && pGlCreateProgramFunc && pGlLinkProgramFunc && pGlUseProgramFunc && pGlDeleteShaderFunc &&
-		pGlVertexAttribPointerFunc && pGlVertexAttribIPointerFunc && pGlAttachShaderFunc && pGlGetProgramivFunc;
+		pGlVertexAttribPointerFunc && pGlVertexAttribIPointerFunc && pGlAttachShaderFunc && pGlGetProgramivFunc && pGlEnableVertexAttribArrayFunc && 
+		pGlDisableVertexAttribArrayFunc && pGlGenVertexArraysFunc && pGlBindVertexArrayFunc;
 }
 
 HGLRC _gl::createContextAttribs(HDC aDvcCtxt, HGLRC aRendCtxt, const int32_t* aAttribsLst)
@@ -281,4 +321,74 @@ void _gl::glGetProgramInfoLog(GLuint aProgram, GLsizei aMaxLength, GLsizei* apLe
 		return;
 	}
 	pGlGetProgramInfoLogFunc(aProgram, aMaxLength, apLength, apInfoLog);
+}
+
+void _gl::glEnableVertexAttribArray(GLuint aIndex)
+{
+	if (!pGlEnableVertexAttribArrayFunc)
+	{
+		assert(false);
+		return;
+	}
+	pGlEnableVertexAttribArrayFunc(aIndex);
+}
+
+void _gl::glDisableVertexAttribArray(GLuint aIndex)
+{
+	if (!pGlDisableVertexAttribArrayFunc)
+	{
+		assert(false);
+		return;
+	}
+	pGlDisableVertexAttribArrayFunc(aIndex);
+}
+
+void _gl::glDeleteVertexArrays(GLsizei aN, const GLuint* apArrays)
+{
+	if (!pGlDeleteVertexArraysFunc)
+	{
+		assert(false);
+		return;
+	}
+	pGlDeleteVertexArraysFunc(aN, apArrays);
+}
+
+void _gl::glDeleteBuffers(GLsizei aN, const GLuint* apBuffers)
+{
+	if (!pGlDeleteBuffersFunc)
+	{
+		assert(false);
+		return;
+	}
+	pGlDeleteBuffersFunc(aN, apBuffers);
+}
+
+void _gl::glDeleteProgram(GLuint aProgram)
+{
+	if (!pGlDeleteProgramFunc)
+	{
+		assert(false);
+		return;
+	}
+	pGlDeleteProgramFunc(aProgram);
+}
+
+void _gl::glGenVertexArrays(GLsizei aN, GLuint* apArrays)
+{
+	if (!pGlGenVertexArraysFunc)
+	{
+		assert(false);
+		return;
+	}
+	pGlGenVertexArraysFunc(aN, apArrays);
+}
+
+void _gl::glBindVertexArray(GLuint aArray)
+{
+	if (!pGlBindVertexArrayFunc)
+	{
+		assert(false);
+		return;
+	}
+	pGlBindVertexArrayFunc(aArray);
 }

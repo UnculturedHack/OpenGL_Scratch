@@ -13,11 +13,13 @@ namespace _gl
 	inline constexpr int32_t GL_FRAGMENT_SHADER = 0x8B30;
 	inline constexpr int32_t GL_COMPILE_STATUS = 0x8B81;
 	inline constexpr int32_t GL_LINK_STATUS = 0x8B82;
+	inline constexpr int32_t GL_ELEMENT_ARRAY_BUFFER = 0x8893;
 
 	using GLsizeiptr = std::ptrdiff_t;
 	using GLchar = char;
 
-	bool load();
+	bool loadWglCrtCtxtFunction();
+	bool loadOpenGlFunctions();
 	HGLRC createContextAttribs(HDC aDvcCtxt, HGLRC aRendCtxt, const int32_t* aAttribsLst);
 	void glGenBuffers(GLsizei aSize, GLuint* apBuffers);
 	void glBindBuffer(GLenum aTarget, GLuint aBuffer);
@@ -36,4 +38,33 @@ namespace _gl
 	void glAttachShader(GLuint aProgram, GLuint aShader);
 	void glGetProgramiv(GLuint aProgram, GLenum aPname, GLint* apParams);
 	void glGetProgramInfoLog(GLuint aProgram, GLsizei aMaxLength, GLsizei* apLength, _gl::GLchar* apInfoLog);
+	void glEnableVertexAttribArray(GLuint aIndex);
+	void glDisableVertexAttribArray(GLuint aIndex);
+	void glDeleteVertexArrays(GLsizei aN, const GLuint* apArrays);
+	void glDeleteBuffers(GLsizei aN, const GLuint* apBuffers);
+	void glDeleteProgram(GLuint aProgram);
+	void glGenVertexArrays(GLsizei aN, GLuint* apArrays);
+	void glBindVertexArray(GLuint aArray);
+
+	struct ShaderData
+	{
+		ShaderData() : 
+			m_shaderProg(0), 
+			m_vtxBffrObj(0), 
+			m_vtxArryObj(0), 
+			m_elemBffrObj(0) 
+		{}
+
+		ShaderData(uint32_t aShaderProg, uint32_t aVBO, uint32_t aVAO, uint32_t aEBO) :
+			m_shaderProg(aShaderProg),
+			m_vtxBffrObj(aVBO),
+			m_vtxArryObj(aVAO),
+			m_elemBffrObj(aEBO)
+		{}
+		
+		const uint32_t m_shaderProg;
+		const uint32_t m_vtxBffrObj;
+		const uint32_t m_vtxArryObj;
+		const uint32_t m_elemBffrObj;
+	};
 }
