@@ -1,6 +1,7 @@
 #include <_gl.h>
 #include "include/utils.h"
 #include <format>
+#include <cassert>
 
 using namespace std;
 
@@ -11,75 +12,15 @@ HGLRC g_rendCtxt = nullptr;
 static constexpr const char* cpWinClsName = "OpenGLWindow";
 static constexpr int32_t cWinWidth = 1600;
 static constexpr int32_t cWinHeight = 900;
+static constexpr int32_t cMaxInfoLogLength = 512;
 
 static constexpr const char* cpSimpleVtxShaderSrcPath = "assets/shaders/simpleVert.glsl";
 static constexpr const char* cpSimpleFrgShaderSrcPath = "assets/shaders/simpleFrag.glsl";
+static constexpr const char* cpSimpleVtxShader2SrcPath = "assets/shaders/simpleVert2.glsl";
+static constexpr const char* cpSimpleFrgShader2SrcPath = "assets/shaders/simpleFrag2.glsl";
+static constexpr const char* cpSimpleVtxShader3SrcPath = "assets/shaders/simpleVert3.glsl";
+static constexpr const char* cpSimpleFrgShader3SrcPath = "assets/shaders/simpleFrag3.glsl";
 
-static void printfDbg(const char* apMsgF, ...)
-{
-    va_list args;
-    va_start(args, apMsgF);
-
-    bool fmtSpecFound = false;
-    constexpr char fmtSpecSymbol = '%';
-    string fmtMsg = "";
-    for(; *apMsgF; ++apMsgF)
-    {
-        const char c = *apMsgF;
-        if (fmtSpecFound)
-        {
-            if (c == 'd')
-            {
-                int32_t d = va_arg(args, int32_t);
-                fmtMsg.append(to_string(d));
-            }
-            else if (c == 'f')
-            {
-                double f = va_arg(args, double);
-                fmtMsg.append(to_string(f));
-            }
-            else if (c == 'c')
-            {
-                int32_t cInt = va_arg(args, int32_t);
-                fmtMsg.push_back(static_cast<char>(va_arg(args, int32_t)));
-            }
-            else if (c == 's')
-            {
-                const char* s = va_arg(args, const char*);
-                fmtMsg.append(s);
-            }
-            else
-            {
-                fmtMsg.push_back(fmtSpecSymbol);
-                if (c == fmtSpecSymbol)
-                {
-                    continue;
-                }
-                fmtMsg.push_back(c);
-            }
-            fmtSpecFound = false;
-        }
-        else
-        {
-            if (c == fmtSpecSymbol)
-            {
-                fmtSpecFound = true;
-            }
-            else
-            {
-                fmtMsg.push_back(c);
-            }
-        }
-    }
-    
-    va_end(args);
-    OutputDebugString(fmtMsg.append("\n").c_str());
-}
-
-static void errMsg(const char* const apText, const char* const apCaption)
-{
-    MessageBox(g_wHndl, apText, apCaption, MB_OK | MB_ICONERROR);
-}
 
 static void processInput()
 {
@@ -95,7 +36,14 @@ static void render(HDC* aphDc, const _gl::ShaderData aShaderData)
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
+    SYSTEMTIME now{};
+    GetLocalTime(&now);
+    float grnVal = (sin(now.wMilliseconds) / 2.0f) + 0.5f;
+    int32_t sharedColorIndex = _gl::glGetUniformLocation(aShaderData.m_cShaderProg, "sharedColor");
+
     _gl::glUseProgram(aShaderData.m_cShaderProg);
+    _gl::glUniform4f(sharedColorIndex, 0.0f, grnVal, 0.0f, 1.0f);
+
     _gl::glBindVertexArray(aShaderData.m_cVtxArryObj);
     //glDrawArrays(GL_TRIANGLES, 0, 6);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -118,6 +66,13 @@ static LRESULT CALLBACK WndProc(HWND aHWnd, UINT aMsg, WPARAM aWParam, LPARAM aL
             {
                 PostQuitMessage(0);
             }
+            break;
+        }
+        case WM_SIZE:
+        {
+            const int32_t cWidth = LOWORD(aLParam);
+            const int32_t cHeight = HIWORD(aLParam);
+            glViewport(0, 0, cWidth, cHeight);
             break;
         }
         default:
@@ -197,7 +152,7 @@ static bool initOpenGL(HWND ahWnd, HDC* aphDc, HGLRC* aphGlrc)
 
     if (!_gl::loadWglCrtCtxtFunction())
     {
-        errMsg("Failed to load WGL context creation function!", "WGL Load Failed!");
+        utils::errMsg(g_wHndl, "Failed to load WGL context creation function!", "WGL Load Failed!");
         return false;
     }
 
@@ -217,7 +172,7 @@ static bool initOpenGL(HWND ahWnd, HDC* aphDc, HGLRC* aphGlrc)
 
     if (!_gl::loadOpenGlFunctions())
     {
-        errMsg("Failed to load OpenGL functions!", "OpenGL Load Failed!");
+        utils::errMsg(g_wHndl, "Failed to load OpenGL functions!", "OpenGL Load Failed!");
         return false;
     }
 
@@ -259,7 +214,7 @@ static bool loadShaderSrc(const char* apVtxShdrSrcPath, string& aVertShaderSrc, 
     catch (runtime_error ex)
     {
         string errorMsg = format("Failed to load source code for vertex shader. Error message:\n\n\"{}\"\n\nExiting...", *ex.what());
-        errMsg(errorMsg.c_str(), "Shader Src Load Failed!");
+        utils::errMsg(g_wHndl, errorMsg.c_str(), "Shader Src Load Failed!");
         aVertShaderSrc = "";
     }
 
@@ -270,7 +225,7 @@ static bool loadShaderSrc(const char* apVtxShdrSrcPath, string& aVertShaderSrc, 
     catch (runtime_error ex)
     {
         string errorMsg = format("Failed to load source code for fragment shader. Error message:\n\n\"{}\"\n\nExiting...", *ex.what());
-        errMsg(errorMsg.c_str(), "Shader Src Load Failed!");
+        utils::errMsg(g_wHndl, errorMsg.c_str(), "Shader Src Load Failed!");
         aFragShaderSrc = "";
     }
 
@@ -282,14 +237,14 @@ static bool createEmptyShaders(uint32_t& aVertexShader, uint32_t& aFragmentShade
     aVertexShader = _gl::glCreateShader(_gl::GL_VERTEX_SHADER);
     if (!aVertexShader)
     {
-        errMsg("Failed to create a vertext shader!", "Shader Creation Failed!\n\nExiting...");
+        utils::errMsg(g_wHndl, "Failed to create vertex shader!", "Shader Creation Failed!\n\nExiting...");
         return false;
     }
 
     aFragmentShader = _gl::glCreateShader(_gl::GL_FRAGMENT_SHADER);
     if (!aFragmentShader)
     {
-        errMsg("Failed to create fragment shader!", "Shader Creation Failed!\n\nExiting...");
+        utils::errMsg(g_wHndl, "Failed to create fragment shader!", "Shader Creation Failed!\n\nExiting...");
         return false;
     }
 
@@ -304,9 +259,9 @@ static bool compileShaders(uint32_t aVertexShader, const _gl::GLchar* apVertShad
     _gl::glGetShaderiv(aVertexShader, _gl::GL_COMPILE_STATUS, &vtxCompStatus);
     if (!vtxCompStatus)
     {
-        char infoLog;
-        _gl::glGetShaderInfoLog(aVertexShader, 512, nullptr, &infoLog);
-        errMsg(format("Vertex shader compilation failed! Log:\n\n{}", infoLog).c_str(), "Shader Comp Failed!");
+        char infoLog[cMaxInfoLogLength]{};
+        _gl::glGetShaderInfoLog(aVertexShader, cMaxInfoLogLength, nullptr, infoLog);
+        utils::errMsg(g_wHndl, format("Vertex shader compilation failed! Log:\n\n{}", infoLog).c_str(), "Vert Shader Comp Failed!");
         return false;
     }
 
@@ -316,9 +271,9 @@ static bool compileShaders(uint32_t aVertexShader, const _gl::GLchar* apVertShad
     _gl::glGetShaderiv(aFragmentShader, _gl::GL_COMPILE_STATUS, &frgCompStatus);
     if (!frgCompStatus)
     {
-        char infoLog;
-        _gl::glGetShaderInfoLog(aFragmentShader, 512, nullptr, &infoLog);
-        errMsg(format("Fragment shader compilation failed! Log:\n\n{}", infoLog).c_str(), "Shader Comp Failed!");
+        char infoLog[cMaxInfoLogLength]{};
+        _gl::glGetShaderInfoLog(aFragmentShader, cMaxInfoLogLength, nullptr, infoLog);
+        utils::errMsg(g_wHndl, format("Fragment shader compilation failed! Log:\n\n{}", infoLog).c_str(), "Frag Shader Comp Failed!");
         return false;
     }
 
@@ -330,7 +285,7 @@ static uint32_t linkShaderProgram(uint32_t& aVertexShader, uint32_t& aFragmentSh
     uint32_t shaderProg = _gl::glCreateProgram();
     if (!shaderProg)
     {
-        errMsg("Failed to create shader program!", "Error!");
+        utils::errMsg(g_wHndl, "Failed to create shader program!", "Error!");
         return 0;
     }
 
@@ -341,9 +296,9 @@ static uint32_t linkShaderProgram(uint32_t& aVertexShader, uint32_t& aFragmentSh
     _gl::glGetProgramiv(shaderProg, _gl::GL_LINK_STATUS, &linkStatus);
     if (!linkStatus)
     {
-        char infoLog[512];
-        _gl::glGetProgramInfoLog(shaderProg, 512, nullptr, infoLog);
-        errMsg(format("Failed to link the shader program. Program log: {}", infoLog).c_str(), "Link Error!");
+        char infoLog[cMaxInfoLogLength]{};
+        _gl::glGetProgramInfoLog(shaderProg, cMaxInfoLogLength, nullptr, infoLog);
+        utils::errMsg(g_wHndl, format("Failed to link the shader program. Program log: {}", infoLog).c_str(), "Link Error!");
         _gl::glDeleteProgram(shaderProg);
         return 0;
     }
@@ -351,7 +306,7 @@ static uint32_t linkShaderProgram(uint32_t& aVertexShader, uint32_t& aFragmentSh
     return shaderProg;
 }
 
-static void initShaderBuffers(uint32_t* apVBO, uint32_t* apVAO, uint32_t* apEBO)
+static void initShaderBuffers(uint32_t& aVBO, uint32_t& aVAO, uint32_t& aEBO)
 {
     //float vertices[] =
     //{
@@ -385,16 +340,16 @@ static void initShaderBuffers(uint32_t* apVBO, uint32_t* apVAO, uint32_t* apEBO)
         //1, 2, 3
     };
 
-    _gl::glGenVertexArrays(1, apVAO);
-    _gl::glGenBuffers(1,  apVBO);
-    _gl::glGenBuffers(1, apEBO);
+    _gl::glGenVertexArrays(1, &aVAO);
+    _gl::glGenBuffers(1,  &aVBO);
+    _gl::glGenBuffers(1, &aEBO);
     // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-    _gl::glBindVertexArray(*apVAO);
+    _gl::glBindVertexArray(aVAO);
 
-    _gl::glBindBuffer(_gl::GL_ARRAY_BUFFER, *apVBO);
+    _gl::glBindBuffer(_gl::GL_ARRAY_BUFFER, aVBO);
     _gl::glBufferData(_gl::GL_ARRAY_BUFFER, sizeof(vertices), vertices, _gl::GL_STATIC_DRAW);
 
-    _gl::glBindBuffer(_gl::GL_ELEMENT_ARRAY_BUFFER, *apEBO);
+    _gl::glBindBuffer(_gl::GL_ELEMENT_ARRAY_BUFFER, aEBO);
     _gl::glBufferData(_gl::GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, _gl::GL_STATIC_DRAW);
 
     _gl::glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
@@ -411,11 +366,11 @@ static void initShaderBuffers(uint32_t* apVBO, uint32_t* apVAO, uint32_t* apEBO)
     _gl::glBindVertexArray(0);
 }
 
-static const _gl::ShaderData initShaders() //uint32_t& aVBO, uint32_t& aVAO, uint32_t& aEBO)
+static const _gl::ShaderData initShaders(const char* apVtxSrcPath, const char* apFrgSrcPath) //uint32_t& aVBO, uint32_t& aVAO, uint32_t& aEBO)
 {
     string vtxSrc;
     string frgSrc;
-    if (!loadShaderSrc(cpSimpleVtxShaderSrcPath, vtxSrc, cpSimpleFrgShaderSrcPath, frgSrc))
+    if (!loadShaderSrc(apVtxSrcPath, vtxSrc, apFrgSrcPath, frgSrc))
     {
         return {};
     }
@@ -445,7 +400,7 @@ static const _gl::ShaderData initShaders() //uint32_t& aVBO, uint32_t& aVAO, uin
     uint32_t VAO;
     uint32_t EBO;
 
-    initShaderBuffers(&VBO, &VAO, &EBO);
+    initShaderBuffers(VBO, VAO, EBO);
 
     if (!VBO || !VAO || !EBO)
     {
@@ -455,6 +410,30 @@ static const _gl::ShaderData initShaders() //uint32_t& aVBO, uint32_t& aVAO, uin
     return { shaderProg, VBO, VAO, EBO };
 }
 
+static const _gl::ShaderData initProjectShaders(uint32_t aProj)
+{
+    switch (aProj)
+    {
+        case 0:
+        {
+            return initShaders(cpSimpleVtxShaderSrcPath, cpSimpleFrgShaderSrcPath);
+        }
+        case 1:
+        {
+            return initShaders(cpSimpleVtxShader2SrcPath, cpSimpleFrgShader2SrcPath);
+        }
+        case 2:
+        {
+            return initShaders(cpSimpleVtxShader3SrcPath, cpSimpleFrgShader3SrcPath);
+        }
+        default:
+        {
+            assert(false);
+            break;
+        }
+    }
+}
+
 int32_t WINAPI wWinMain(_In_ HINSTANCE ahInstance, _In_opt_ HINSTANCE ahPrevInstance, _In_ PWSTR aArgsStr, _In_ int32_t anCmdShow)
 {
     registerWndClass(ahInstance);
@@ -462,23 +441,28 @@ int32_t WINAPI wWinMain(_In_ HINSTANCE ahInstance, _In_opt_ HINSTANCE ahPrevInst
 
     if (!initOpenGL(g_wHndl, &g_dvcCtxt, &g_rendCtxt))
     {
-        errMsg("Could not create an OpenGL 3.3 context.\n\nExiting...", "OpenGL Init Error!");
+        utils::errMsg(g_wHndl, "Could not create an OpenGL 3.3 context.\n\nExiting...", "OpenGL Init Error!");
         DestroyWindow(g_wHndl);
         return 1;
     }
 
-    const _gl::ShaderData shaderData = initShaders();
+    const _gl::ShaderData shaderData = initProjectShaders(2);
     if (!shaderData.m_cShaderProg)
     {
-        errMsg("Shader initialization failed.\n\nExiting...", "Shader Setup Error!");
+        utils::errMsg(g_wHndl, "Shader initialization failed.\n\nExiting...", "Shader Setup Error!");
         shutdownOpenGL(g_wHndl, g_dvcCtxt, g_rendCtxt);
         DestroyWindow(g_wHndl);
         return 1;
     }
 
-    ShowWindow(g_wHndl, anCmdShow);
+    //-----------
+    //int32_t maxVtxAttbs;
+    //glGetIntegerv(_gl::GL_MAX_VERTEX_ATTRIBS, &maxVtxAttbs); = 16 for my desktop
+    //-----------
 
     glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
+
+    ShowWindow(g_wHndl, anCmdShow);
 
     MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0))

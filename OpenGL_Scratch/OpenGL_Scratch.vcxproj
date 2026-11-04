@@ -27,7 +27,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\simpleFrag.glsl" />
+    <None Include="assets\shaders\simpleFrag2.glsl" />
+    <None Include="assets\shaders\simpleFrag3.glsl" />
     <None Include="assets\shaders\simpleVert.glsl" />
+    <None Include="assets\shaders\simpleVert2.glsl" />
+    <None Include="assets\shaders\simpleVert3.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\_gl\_gl.vcxproj">
