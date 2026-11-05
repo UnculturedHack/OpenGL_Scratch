@@ -3,6 +3,7 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Project Path="../utils/utils.vcxproj" Id="c886430e-f58e-461b-a3df-10ed4dd4678e" />
   <Project Path="../_gl/_gl.vcxproj" Id="7b90f0e3-b54b-48ac-b896-5a378b793a68" />
   <Project Path="OpenGL_Scratch/OpenGL_Scratch.vcxproj" Id="5e07bb59-4a08-402d-baf1-18a0986eaf5f" />
 </Solution>

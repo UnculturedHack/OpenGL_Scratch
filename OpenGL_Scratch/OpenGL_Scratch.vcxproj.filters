@@ -10,10 +10,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="src\utils.cpp" />
+    <ClCompile Include="src\triangles.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\utils.h" />
+    <ClInclude Include="include\triangles.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\simpleVert.glsl" />
@@ -22,5 +22,7 @@
     <None Include="assets\shaders\simpleVert2.glsl" />
     <None Include="assets\shaders\simpleFrag3.glsl" />
     <None Include="assets\shaders\simpleVert3.glsl" />
+    <None Include="assets\shaders\simpleFrag4.glsl" />
+    <None Include="assets\shaders\simpleVert4.glsl" />
   </ItemGroup>
 </Project>
