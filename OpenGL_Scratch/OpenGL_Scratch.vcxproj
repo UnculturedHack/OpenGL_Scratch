@@ -20,9 +20,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\camera.cpp" />
+    <ClCompile Include="src\textures.cpp" />
+    <ClCompile Include="src\transformations.cpp" />
     <ClCompile Include="src\triangles.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\camera.h" />
+    <ClInclude Include="include\textures.h" />
+    <ClInclude Include="include\transformations.h" />
     <ClInclude Include="include\triangles.h" />
   </ItemGroup>
   <ItemGroup>

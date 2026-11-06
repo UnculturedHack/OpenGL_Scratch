@@ -3,19 +3,14 @@
 #include <cmath>
 #include <stdexcept>
 
-void tri::renderSimple(HDC* aphDc, const _gl::ShaderData aShaderData)
-{
-    throw std::runtime_error("renderSimple() function not implemented!");
-}
-
 void tri::initSimpleBuffers(uint32_t& aVBO, uint32_t& aVAO)
 {
     throw std::runtime_error("initSimpleBuffers() function not implemented!");
 }
 
-void tri::renderSimple2(HDC* aphDc, const _gl::ShaderData aShaderData)
+void tri::renderSimple(HDC* aphDc, const _gl::ShaderData aShaderData)
 {
-    throw std::runtime_error("renderSimple2() function not implemented!");
+    throw std::runtime_error("renderSimple() function not implemented!");
 }
 
 void tri::initSimple2Buffers(uint32_t& aVBO, uint32_t& aVAO, uint32_t& aEBO)
@@ -23,26 +18,9 @@ void tri::initSimple2Buffers(uint32_t& aVBO, uint32_t& aVAO, uint32_t& aEBO)
     throw std::runtime_error("initSimple2Buffers() function not implemented!");
 }
 
-void tri::renderSimple3(HDC* aphDc, const _gl::ShaderData aShaderData)
+void tri::renderSimple2(HDC* aphDc, const _gl::ShaderData aShaderData)
 {
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    _gl::glUseProgram(aShaderData.m_cShaderProg);
-    int32_t sharedColorIndex = _gl::glGetUniformLocation(aShaderData.m_cShaderProg, "sharedColor");
-    if (sharedColorIndex >= 0)
-    {
-        SYSTEMTIME now;
-        GetLocalTime(&now);
-        float redVal = (sin(now.wMilliseconds) / 2.0f) + 0.5f;
-        float grnVal = sin(now.wMilliseconds) / 2.0f;
-        // glUseProgram() must be called before a uniform is updated.
-        _gl::glUniform4f(sharedColorIndex, redVal, grnVal, 0.0f, 1.0f);
-    }
-
-    _gl::glBindVertexArray(aShaderData.m_cVtxArryObj);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-    SwapBuffers(*aphDc);
+    throw std::runtime_error("renderSimple2() function not implemented!");
 }
 
 void tri::initSimple3Buffers(uint32_t& aVBO, uint32_t& aVAO, uint32_t& aEBO)
@@ -82,12 +60,24 @@ void tri::initSimple3Buffers(uint32_t& aVBO, uint32_t& aVAO, uint32_t& aEBO)
     _gl::glEnableVertexAttribArray(0);
 }
 
-void tri::renderSimple4(HDC* aphDc, const _gl::ShaderData aShaderData)
+void tri::renderSimple3(HDC* aphDc, const _gl::ShaderData aShaderData)
 {
     glClear(GL_COLOR_BUFFER_BIT);
-    _gl::glUseProgram(aShaderData.m_cShaderProg);
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    _gl::glUseProgram(aShaderData.m_cShaderProg);
+    int32_t sharedColorIndex = _gl::glGetUniformLocation(aShaderData.m_cShaderProg, "sharedColor");
+    if (sharedColorIndex >= 0)
+    {
+        SYSTEMTIME now;
+        GetLocalTime(&now);
+        float redVal = (sin(now.wMilliseconds) / 2.0f) + 0.5f;
+        float grnVal = sin(now.wMilliseconds) / 2.0f;
+        // glUseProgram() must be called before a uniform is updated.
+        _gl::glUniform4f(sharedColorIndex, redVal, grnVal, 0.0f, 1.0f);
+    }
+
+    _gl::glBindVertexArray(aShaderData.m_cVtxArryObj);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     SwapBuffers(*aphDc);
 }
@@ -116,4 +106,14 @@ void tri::initSimple4Buffers(uint32_t& aVBO, uint32_t& aVAO)
     // color attribute
     _gl::glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     _gl::glEnableVertexAttribArray(1);
+}
+
+void tri::renderSimple4(HDC* aphDc, const _gl::ShaderData aShaderData)
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+    _gl::glUseProgram(aShaderData.m_cShaderProg);
+
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    SwapBuffers(*aphDc);
 }

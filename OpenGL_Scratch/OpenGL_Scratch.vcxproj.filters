@@ -11,9 +11,15 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="src\triangles.cpp" />
+    <ClCompile Include="src\transformations.cpp" />
+    <ClCompile Include="src\camera.cpp" />
+    <ClCompile Include="src\textures.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\triangles.h" />
+    <ClInclude Include="include\transformations.h" />
+    <ClInclude Include="include\camera.h" />
+    <ClInclude Include="include\textures.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\simpleVert.glsl" />
