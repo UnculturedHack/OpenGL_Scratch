@@ -1,5 +1,5 @@
 #include "triangles.h"
-#include <_gl.h>
+#include "_gl.h"
 #include <cmath>
 #include <stdexcept>
 

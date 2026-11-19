@@ -42,10 +42,10 @@
     <None Include="assets\shaders\simpleVert4.glsl" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\utils\utils.vcxproj">
+    <ProjectReference Include="..\utils\utils.vcxproj">
       <Project>{c886430e-f58e-461b-a3df-10ed4dd4678e}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\_gl\_gl.vcxproj">
+    <ProjectReference Include="..\_gl\_gl.vcxproj">
       <Project>{7b90f0e3-b54b-48ac-b896-5a378b793a68}</Project>
     </ProjectReference>
   </ItemGroup>
@@ -115,7 +115,7 @@
       <PreprocessorDefinitions>_WINDOWS;</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)..\..\utils\include;$(ProjectDir)..\..\_gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)..\utils\include;$(ProjectDir)..\_gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -134,7 +134,7 @@
       <PreprocessorDefinitions>_WINDOWS;</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)..\..\utils\include;$(ProjectDir)..\..\_gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)..\utils\include;$(ProjectDir)..\_gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -151,7 +151,7 @@
       <PreprocessorDefinitions>_WINDOWS;</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)..\..\utils\include;$(ProjectDir)..\..\_gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)..\utils\include;$(ProjectDir)..\_gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -172,7 +172,7 @@
       <PreprocessorDefinitions>_WINDOWS;</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)..\..\utils\include;$(ProjectDir)..\..\_gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)..\utils\include;$(ProjectDir)..\_gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
