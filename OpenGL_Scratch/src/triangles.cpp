@@ -58,6 +58,8 @@ void tri::initSimple3Buffers(uint32_t& aVBO, uint32_t& aVAO, uint32_t& aEBO)
     // position attribute
     _gl::glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     _gl::glEnableVertexAttribArray(0);
+
+    
 }
 
 void tri::renderSimple3(HDC* aphDc, const _gl::ShaderData aShaderData)

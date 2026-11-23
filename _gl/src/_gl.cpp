@@ -131,6 +131,10 @@ namespace
 	using PFNGLTEXPARAMETERIVPROC = void (APIENTRY*)(GLenum, GLenum, const GLint*);
 	PFNGLTEXPARAMETERIVPROC pGlTexParameterivFunc = nullptr;
 	constexpr const char* cpGlTexParameterivFuncName = "glTexParameteriv";
+
+	using PFNGLGENERATEMIPMAPPROC = void (APIENTRY*)(GLenum);
+	PFNGLGENERATEMIPMAPPROC pGlGenerateMipmapFunc = nullptr;
+	constexpr const char* cpGlGenerateMipmapFuncName = "glGenerateMipmap";
 }
 
 //========== Startup / Shutdown ==========
@@ -574,42 +578,12 @@ void _gl::glUniform4f(GLint aLocation, GLfloat aVal0, GLfloat aVal1, GLfloat aVa
 	pGlUniform4fFunc(aLocation, aVal0, aVal1, aVal2, aVal3);
 }
 
-//void _gl::glTexParameterf(GLenum aTarget, GLenum aName, GLfloat aParam)
-//{
-//	if (!pGlTexParameterfFunc)
-//	{
-//		assert(false);
-//		return;
-//	}
-//	pGlTexParameterfFunc(aTarget, aName, aParam);
-//}
-//
-//void _gl::glTexParameteri(GLenum aTarget, GLenum aName, GLint aParam)
-//{
-//	if (!pGlTexParameteriFunc)
-//	{
-//		assert(false);
-//		return;
-//	}
-//	pGlTexParameteriFunc(aTarget, aName, aParam);
-//}
-//
-//void glTexParameterfv(GLenum aTarget, GLenum aName, const GLfloat* apParams)
-//{
-//	if (!pGlTexParameterfvFunc)
-//	{
-//		assert(false);
-//		return;
-//	}
-//	pGlTexParameterfvFunc(aTarget, aName, apParams);
-//}
-//
-//void glTexParameteriv(GLenum aTarget, GLenum aName, const GLint* apParams)
-//{
-//	if (!pGlTexParameterivFunc)
-//	{
-//		assert(false);
-//		return;
-//	}
-//	pGlTexParameterivFunc(aTarget, aName, apParams);
-//}
+void _gl::glGenerateMipmap(GLenum aTarget)
+{
+	if (!pGlGenerateMipmapFunc)
+	{
+		assert(false);
+		return;
+	}
+	pGlGenerateMipmapFunc(aTarget);
+}

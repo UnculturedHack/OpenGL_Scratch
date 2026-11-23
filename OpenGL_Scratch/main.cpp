@@ -4,6 +4,7 @@
 #include <chrono>
 #include <thread>
 #include <utils.h>
+#include "textures.h"
 #include "triangles.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -31,6 +32,8 @@ static constexpr const char* cpSimpleVtxShader3SrcPath = "assets/shaders/simpleV
 static constexpr const char* cpSimpleFrgShader3SrcPath = "assets/shaders/simpleFrag3.glsl";
 static constexpr const char* cpSimpleVtxShader4SrcPath = "assets/shaders/simpleVert4.glsl";
 static constexpr const char* cpSimpleFrgShader4SrcPath = "assets/shaders/simpleFrag4.glsl";
+static constexpr const char* cpWoodTextFrgShaderSrcPath = "assets/shaders/woodTextureFrag.glsl";
+static constexpr const char* cpWoodTextVtxShaderSrcPath = "assets/shaders/woodTextureVert.glsl";
 
 static void processInput()
 {
@@ -243,6 +246,10 @@ static void initShaderBuffers(uint32_t aProj, uint32_t& aVBO, uint32_t& aVAO, ui
             tri::initSimple4Buffers(aVBO, aVAO);
             break;
         }
+        case 4:
+        {
+            tx::initWoodRectShaders(aVBO, aVAO);
+        }
     }
 }
 
@@ -376,6 +383,10 @@ static const _gl::ShaderData initProjectShaders(uint32_t aProj)
         case 3:
         {
             return initShaders(aProj, cpSimpleVtxShader4SrcPath, cpSimpleFrgShader4SrcPath);
+        }
+        case 4:
+        {
+            return initShaders(aProj, cpWoodTextVtxShaderSrcPath, cpWoodTextFrgShaderSrcPath);
         }
         default:
         {

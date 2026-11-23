@@ -66,10 +66,7 @@ namespace _gl
 	GL_API void glBindVertexArray(GLuint aArray);
 	GL_API GLint glGetUniformLocation(GLuint aProgram, const GLchar* apName);
 	GL_API void glUniform4f(GLint aLocation, GLfloat aVal0, GLfloat aVal1, GLfloat aVal2, GLfloat aVal3);
-	//GL_API void glTexParameterf(GLenum aTarget, GLenum aName, GLfloat aParam);
-	//GL_API void glTexParameteri(GLenum aTarget, GLenum aName, GLint aParam);
-	//GL_API void glTexParameterfv(GLenum aTarget, GLenum aName, const GLfloat* apParams);
-	//GL_API void glTexParameteriv(GLenum aTarget, GLenum aName, const GLint* apParams);
+	GL_API void glGenerateMipmap(GLenum aTarget);
 
 	struct ShaderData
 	{
