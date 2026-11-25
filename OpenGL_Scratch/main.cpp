@@ -35,6 +35,17 @@ static constexpr const char* cpSimpleFrgShader4SrcPath = "assets/shaders/simpleF
 static constexpr const char* cpWoodTextFrgShaderSrcPath = "assets/shaders/woodTextureFrag.glsl";
 static constexpr const char* cpWoodTextVtxShaderSrcPath = "assets/shaders/woodTextureVert.glsl";
 
+static enum Project
+{
+    SIMPLE_1 = 0,
+    SIMPLE_2 = 1,
+    SIMPLE_3 = 2,
+    SIMPLE_4 = 3,
+    WOOD_RECT = 4,
+};
+
+static constexpr Project cProjectToRun = Project::WOOD_RECT;
+
 static void processInput()
 {
 
@@ -45,7 +56,7 @@ static void update(/*double aDeltaTimeMs*/)
     // logic
 }
 
-static void render(uint32_t aProj, HDC* aphDc, const _gl::ShaderData aShaderData)
+static void render(Project aProj, HDC* aphDc, const _gl::ShaderData aShaderData)
 {
     switch (aProj)
     {
@@ -69,31 +80,17 @@ static void render(uint32_t aProj, HDC* aphDc, const _gl::ShaderData aShaderData
             tri::renderSimple4(aphDc, aShaderData);
             break;
         }
+        case 4:
+        {
+            tx::renderWoodRect(aphDc, aShaderData);
+            break;
+        }
+        default:
+        {
+            assert(false);
+            break;
+        }
     }
-
-    //glClear(GL_COLOR_BUFFER_BIT);
-
-    //-------------------------------------------------------
-    //_gl::glUseProgram(aShaderData.m_cShaderProg);
-    //int32_t sharedColorIndex = _gl::glGetUniformLocation(aShaderData.m_cShaderProg, "sharedColor");
-    //if (sharedColorIndex >= 0)
-    //{
-    //    SYSTEMTIME now;
-    //    GetLocalTime(&now);
-        //float redVal = (sin(now.wMilliseconds) / 2.0f) + 0.5f;
-    //    float grnVal = sin(now.wMilliseconds) / 2.0f;
-    //    // glUseProgram() must be called before a uniform is updated.
-    //    _gl::glUniform4f(sharedColorIndex, redVal, grnVal, 0.0f, 1.0f);
-    //}
-
-    //_gl::glBindVertexArray(aShaderData.m_cVtxArryObj);
-    //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    //-------------------------------------------------------
-
-    //_gl::glBindVertexArray(aShaderData.m_cVtxArryObj);
-    //glDrawArrays(GL_TRIANGLES, 0, 3);
-    
-    //SwapBuffers(*aphDc);
 }
 
 static LRESULT CALLBACK WndProc(HWND aHWnd, UINT aMsg, WPARAM aWParam, LPARAM aLParam)
@@ -222,105 +219,44 @@ static uint32_t linkShaderProgram(uint32_t& aVertexShader, uint32_t& aFragmentSh
     return shaderProg;
 }
 
-static void initShaderBuffers(uint32_t aProj, uint32_t& aVBO, uint32_t& aVAO, uint32_t& aEBO)
+static void initShaderBuffers(Project aProj, uint32_t& aVBO, uint32_t& aVAO, uint32_t& aEBO)
 {
     switch (aProj)
     {
-        case 0:
+        case Project::SIMPLE_1:
         {
             tri::initSimpleBuffers(aVBO, aVAO);
             break;
         }
-        case 1:
+        case Project::SIMPLE_2:
         {
             tri::initSimple2Buffers(aVBO, aVAO, aEBO);
             break;
         }
-        case 2:
+        case Project::SIMPLE_3:
         {
             tri::initSimple3Buffers(aVBO, aVAO, aEBO);
             break;
         }
-        case 3:
+        case Project::SIMPLE_4:
         {
             tri::initSimple4Buffers(aVBO, aVAO);
             break;
         }
-        case 4:
+        case Project::WOOD_RECT:
         {
-            tx::initWoodRectShaders(aVBO, aVAO);
+            tx::initWoodRect(aVBO, aVAO);
+            break;
+        }
+        default:
+        {
+            assert(false);
+            break;
         }
     }
 }
 
-//static void initShaderBuffers(uint32_t& aVBO, uint32_t& aVAO, uint32_t& aEBO)
-//{
-//    //float vertices[] =
-//    //{
-//    //     0.5f,  0.5f, 0.0f,
-//    //     0.5f, -0.5f, 0.0f,
-//    //    -0.5f, -0.5f, 0.0f,
-//    //    -0.5f,  0.5f, 0.0f
-//    //};
-//
-//    //float vertices[] = {
-//    //-0.5f, -0.5f, 0.0f,
-//    // 0.5f, -0.5f, 0.0f,
-//    // 0.0f,  0.5f, 0.0f
-//    //};
-//
-//    //float vertices[] = {
-//    //    // Tri 1
-//    //    -0.5f, -0.5f, 0.0f,
-//    //    0.0f, -0.5f, 0.0f,
-//    //    -0.25f, 0.0f, 0.0f,
-//    //    // Tri 2
-//    //    0.5f, 0.5f, 0.0f,
-//    //    0.25f,  0.0f, 0.0f,
-//    //    0.0f, 0.5f, 0.0f
-//    //};
-//
-//    
-//
-//    //uint32_t indices[] =
-//    //{
-//    //    0,1,2,3,4,5
-//    //    //0, 1, 3, 5, 2, 4
-//    //    //1, 2, 3
-//    //};
-//
-//    _gl::glGenVertexArrays(1, &aVAO);
-//    _gl::glGenBuffers(1,  &aVBO);
-//    //_gl::glGenBuffers(1, &aEBO);
-//    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-//    _gl::glBindVertexArray(aVAO);
-//
-//    _gl::glBindBuffer(_gl::GL_ARRAY_BUFFER, aVBO);
-//    _gl::glBufferData(_gl::GL_ARRAY_BUFFER, sizeof(vertices), vertices, _gl::GL_STATIC_DRAW);
-//
-//    //_gl::glBindBuffer(_gl::GL_ELEMENT_ARRAY_BUFFER, aEBO);
-//    //_gl::glBufferData(_gl::GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, _gl::GL_STATIC_DRAW);
-//
-//    // position attribute
-//    _gl::glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-//    _gl::glEnableVertexAttribArray(0);
-//
-//    // color attribute
-//    _gl::glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-//    _gl::glEnableVertexAttribArray(1);
-//
-//    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-//    //_gl::glBindBuffer(_gl::GL_ARRAY_BUFFER, 0);
-//
-//    // remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
-//    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-//
-//    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-//    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-//    //_gl::glBindVertexArray(0);
-//}
-
-static const _gl::ShaderData initShaders(uint32_t aProj, const char* apVtxSrcPath, const char* apFrgSrcPath) //uint32_t& aVBO, uint32_t& aVAO, uint32_t& aEBO)
+static const _gl::ShaderData initShaders(Project aProj, const char* apVtxSrcPath, const char* apFrgSrcPath) //uint32_t& aVBO, uint32_t& aVAO, uint32_t& aEBO)
 {
     string vtxSrc;
     string frgSrc;
@@ -364,27 +300,27 @@ static const _gl::ShaderData initShaders(uint32_t aProj, const char* apVtxSrcPat
     return { shaderProg, VBO, VAO, EBO };
 }
 
-static const _gl::ShaderData initProjectShaders(uint32_t aProj)
+static const _gl::ShaderData initProjectShaders(Project aProj)
 {
     switch (aProj)
     {
-        case 0:
+        case Project::SIMPLE_1:
         {
             return initShaders(aProj, cpSimpleVtxShaderSrcPath, cpSimpleFrgShaderSrcPath);
         }
-        case 1:
+        case Project::SIMPLE_2:
         {
             return initShaders(aProj, cpSimpleVtxShader2SrcPath, cpSimpleFrgShader2SrcPath);
         }
-        case 2:
+        case Project::SIMPLE_3:
         {
             return initShaders(aProj, cpSimpleVtxShader3SrcPath, cpSimpleFrgShader3SrcPath);
         }
-        case 3:
+        case Project::SIMPLE_4:
         {
             return initShaders(aProj, cpSimpleVtxShader4SrcPath, cpSimpleFrgShader4SrcPath);
         }
-        case 4:
+        case Project::WOOD_RECT:
         {
             return initShaders(aProj, cpWoodTextVtxShaderSrcPath, cpWoodTextFrgShaderSrcPath);
         }
@@ -408,9 +344,7 @@ int32_t WINAPI wWinMain(_In_ HINSTANCE ahInstance, _In_opt_ HINSTANCE ahPrevInst
         return 1;
     }
 
-    constexpr uint32_t proj = 3;
-
-    const _gl::ShaderData shaderData = initProjectShaders(proj);
+    const _gl::ShaderData shaderData = initProjectShaders(cProjectToRun);
     if (!shaderData.m_cShaderProg)
     {
         utils::errMsg(g_wHndl, "Shader initialization failed.\n\nExiting...", "Shader Setup Error!");
@@ -418,11 +352,6 @@ int32_t WINAPI wWinMain(_In_ HINSTANCE ahInstance, _In_opt_ HINSTANCE ahPrevInst
         DestroyWindow(g_wHndl);
         return 1;
     }
-
-    //-----------
-    //int32_t maxVtxAttbs;
-    //glGetIntegerv(_gl::GL_MAX_VERTEX_ATTRIBS, &maxVtxAttbs); = 16 for my desktop
-    //-----------
 
     _gl::glUseProgram(shaderData.m_cShaderProg);
     glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
@@ -453,7 +382,7 @@ int32_t WINAPI wWinMain(_In_ HINSTANCE ahInstance, _In_opt_ HINSTANCE ahPrevInst
 
         processInput();
         update();
-        render(proj, &g_dvcCtxt, shaderData);
+        render(cProjectToRun, &g_dvcCtxt, shaderData);
 
         const chrono::duration frameElpsdTimePt = _clock::now() - frameStartTimePt;
         if (frameElpsdTimePt < cTargetFrameTime)
@@ -461,17 +390,6 @@ int32_t WINAPI wWinMain(_In_ HINSTANCE ahInstance, _In_opt_ HINSTANCE ahPrevInst
             this_thread::sleep_for(cTargetFrameTime - frameElpsdTimePt);
         }
     }
-
-    // This while loop does not run continuously; GetMessage is a blocking call that waits until a new message is received.
-    //while (GetMessage(&msg, nullptr, 0, 0))
-    //{
-    //    TranslateMessage(&msg);
-    //    DispatchMessage(&msg);
-
-    //    processInput();
-    //    update();
-    //    render(&g_dvcCtxt, shaderData);
-    //}
 
     _gl::shutdownOpenGL(g_wHndl, g_dvcCtxt, g_rendCtxt);
     DestroyWindow(g_wHndl);

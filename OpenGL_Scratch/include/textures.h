@@ -11,7 +11,7 @@ namespace _gl
 namespace tx
 {
 	// 
-	void initWoodRectShaders(uint32_t& aVBO, uint32_t& aVAO);
+	void initWoodRect(uint32_t& aVBO, uint32_t& aVAO);
 	void renderWoodRect(HDC* aphDc, const _gl::ShaderData aShaderData);
 
 	//

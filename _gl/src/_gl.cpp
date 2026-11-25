@@ -279,12 +279,13 @@ bool _gl::loadOpenGlFunctions()
 	pGlBindVertexArrayFunc = reinterpret_cast<PFNGLBINDVERTEXARRAYPROC>(wglGetProcAddress(cpGlBindVertexArrayFuncName));
 	pGlGetUniformLocationFunc = reinterpret_cast<PFNGLGETUNIFORMLOCATIONPROC>(wglGetProcAddress(cpGlGetUniformLocationFuncName));
 	pGlUniform4fFunc = reinterpret_cast<PFNGLUNIFORM4FPROC>(wglGetProcAddress(cpGlUniform4fFuncName));
+	pGlGenerateMipmapFunc = reinterpret_cast<PFNGLGENERATEMIPMAPPROC>(wglGetProcAddress(cpGlGenerateMipmapFuncName));
 
 	return pGlGenBuffersFunc && pGlBindBufferFunc && pGlBufferDataFunc && pGlCreateShaderFunc && pGlShaderSourceFunc && pGlCompileShaderFunc &&
 		pGlGetShaderivFunc && pGlGetShaderInfoLogFunc && pGlCreateProgramFunc && pGlLinkProgramFunc && pGlUseProgramFunc && pGlDeleteShaderFunc &&
 		pGlVertexAttribPointerFunc && pGlVertexAttribIPointerFunc && pGlAttachShaderFunc && pGlGetProgramivFunc && pGlEnableVertexAttribArrayFunc && 
-		pGlDisableVertexAttribArrayFunc && pGlGenVertexArraysFunc && pGlBindVertexArrayFunc && pGlGetUniformLocationFunc && pGlUniform4fFunc &&
-		pGlTexParameterfFunc && pGlTexParameteriFunc && pGlTexParameterfvFunc && pGlTexParameterivFunc;
+		pGlDisableVertexAttribArrayFunc && pGlDeleteVertexArraysFunc && pGlDeleteBuffersFunc && pGlDeleteProgramFunc && pGlGenVertexArraysFunc && 
+		pGlBindVertexArrayFunc && pGlGetUniformLocationFunc && pGlUniform4fFunc && pGlGenerateMipmapFunc;
 }
 
 HGLRC _gl::createContextAttribs(HDC aDvcCtxt, HGLRC aRendCtxt, const int32_t* aAttribsLst)
@@ -299,7 +300,6 @@ HGLRC _gl::createContextAttribs(HDC aDvcCtxt, HGLRC aRendCtxt, const int32_t* aA
 
 //========== Helpers ==========
 
-//bool _gl::loadShaderSrc(const char* apVtxShdrSrcPath, string& aVertShaderSrc, const char* apFrgShdrSrcPath, string& aFragShaderSrc)
 bool _gl::loadShaderSrc(const char* apShdrSrcPath, std::string& aShdrSrc)
 {
 	try
@@ -308,8 +308,6 @@ bool _gl::loadShaderSrc(const char* apShdrSrcPath, std::string& aShdrSrc)
 	}
 	catch (std::runtime_error ex)
 	{
-		//std::string errorMsg = std::format("Failed to load source code for vertex shader. Error message:\n\n\"{}\"\n\nExiting...", *ex.what());
-		//utils::errMsg(g_wHndl, errorMsg.c_str(), "Shader Src Load Failed!");
 		aShdrSrc = "";
 	}
 

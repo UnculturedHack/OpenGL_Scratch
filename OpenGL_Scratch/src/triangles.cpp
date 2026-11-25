@@ -58,8 +58,6 @@ void tri::initSimple3Buffers(uint32_t& aVBO, uint32_t& aVAO, uint32_t& aEBO)
     // position attribute
     _gl::glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     _gl::glEnableVertexAttribArray(0);
-
-    
 }
 
 void tri::renderSimple3(HDC* aphDc, const _gl::ShaderData aShaderData)
@@ -78,7 +76,6 @@ void tri::renderSimple3(HDC* aphDc, const _gl::ShaderData aShaderData)
         _gl::glUniform4f(sharedColorIndex, redVal, grnVal, 0.0f, 1.0f);
     }
 
-    _gl::glBindVertexArray(aShaderData.m_cVtxArryObj);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     SwapBuffers(*aphDc);
