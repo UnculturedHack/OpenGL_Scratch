@@ -67,6 +67,7 @@ namespace _gl
 	GL_API GLint glGetUniformLocation(GLuint aProgram, const GLchar* apName);
 	GL_API void glUniform4f(GLint aLocation, GLfloat aVal0, GLfloat aVal1, GLfloat aVal2, GLfloat aVal3);
 	GL_API void glGenerateMipmap(GLenum aTarget);
+	GL_API void glEnable(GLenum aCap);
 
 	struct ShaderData
 	{

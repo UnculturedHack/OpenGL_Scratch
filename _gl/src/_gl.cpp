@@ -135,6 +135,10 @@ namespace
 	using PFNGLGENERATEMIPMAPPROC = void (APIENTRY*)(GLenum);
 	PFNGLGENERATEMIPMAPPROC pGlGenerateMipmapFunc = nullptr;
 	constexpr const char* cpGlGenerateMipmapFuncName = "glGenerateMipmap";
+
+	using PFNGLENABLEPROC = void (APIENTRY*)(GLenum);
+	PFNGLENABLEPROC pGlEnableFunc = nullptr;
+	constexpr const char* cpGlEnableFuncName = "glEnable";
 }
 
 //========== Startup / Shutdown ==========
@@ -584,4 +588,14 @@ void _gl::glGenerateMipmap(GLenum aTarget)
 		return;
 	}
 	pGlGenerateMipmapFunc(aTarget);
+}
+
+void _gl::glEnable(GLenum aCap)
+{
+	if (!pGlEnableFunc)
+	{
+		assert(false);
+		return;
+	}
+	pGlEnableFunc(aCap);
 }
